@@ -25,7 +25,7 @@ time.sleep(2)
 height = driver.execute_script('return document.body.scrollHeight')
 
 scroll_height = 0
-for i in range(10):
+for i in range(5):
     scroll_height = scroll_height + (height/10)
     driver.execute_script('window.scrollTo(0,arguments[0]);',scroll_height)
     time.sleep(2)
@@ -35,6 +35,7 @@ containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'RetailItine
 current_date = datetime.date.today()
 date_added = current_date.strftime("%B %d %Y")
 total_time = 0
+layover_name = ""
 
 for item in containers:
     name_search = item.find_element(By.XPATH, ".//div[contains(@class, 'SliceDisplay__AirlineText')]")
@@ -44,6 +45,7 @@ for item in containers:
     arrival_airport_search = item.find_element(By.XPATH, ".//span[contains(@data-testid, 'arrival-airport')]")
     departure_airport_search = item.find_element(By.XPATH, ".//span[contains(@data-testid, 'departure-airport')]")
     layout_airport_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-airport')]")
+    layover_airports_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-duration')]")
 
     for lay in layout_airport_search:
         if lay:
@@ -56,16 +58,27 @@ for item in containers:
             except ValueError:
                 pass
 
+    for code in layover_airports_search:
+        if code:
+            try:
+                # layover_name = (layover_name + "/" + code.text) 
+                layover_name = '-'.join(code.text for code in layover_airports_search if code.text)
+                # layover_name = "".join([layover_name, "/",  code.text])
+            except ValueError:
+                pass
+
+
     arrival_time_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'arrival-time')]")
     flight_price_Search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'display-price')]")
     duration_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'slice-duration')]")
-    
+   
     airline_info.append([
         name_search.text, 
         departure_airport_search.text, 
         departure_time_search.text, 
         number_of_stops_search.text, 
         total_time,
+        layover_name,
         arrival_airport_search.text, 
         arrival_time_search.text, 
         arrival_date_search.text,  
@@ -82,7 +95,7 @@ file = gspread.authorize(credentials)
 sheet = file.open("FlightPricing")
 sheet = sheet.sheet1 
 
-df_airline = pd.DataFrame(airline_info, columns = ['Airline Name', 'Departure Airport', 'Departure Time', '# Layover Stops', 'Total Layover Duration', 'Arrival Airport', 'Arrival Time', 'Arrival Date', 'Total Duration of Travel', 'Price', 'Date Added'])
+df_airline = pd.DataFrame(airline_info, columns = ['Airline Name', 'Departure Airport', 'Departure Time', '# Layover Stops', 'Total Layover Duration', 'Layover Airports','Arrival Airport', 'Arrival Time', 'Arrival Date', 'Total Duration of Travel', 'Price', 'Date Added'])
 set_with_dataframe(sheet, df_airline)
 
 
