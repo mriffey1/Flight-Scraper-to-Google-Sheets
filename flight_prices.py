@@ -23,6 +23,7 @@ driver.get("https://www.priceline.com/m/fly/search/IND-NRT-20230603/NRT-IND-2023
 wait = WebDriverWait(driver,30)
 wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'RetailItinerarystyles__CursorStyles')]")))
 time.sleep(2)
+
 height = driver.execute_script('return document.body.scrollHeight')
 
 scroll_height = 0
@@ -56,8 +57,7 @@ for item in containers:
     layout_airport_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-airport')]")
     layover_airports_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-duration')]")
 
-# The for loop below goes through and grabs both sets of layover airport info since both items have the same
-# div id. 
+# The for loop below goes through and grabs both sets of layover airport info since both items have the same div id. 
     for lay in layout_airport_search:
         if lay:
             new_name = lay.text.replace("h", ",").replace(" ", "").replace("m", "").strip()
@@ -82,7 +82,7 @@ for item in containers:
     flight_price_Search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'display-price')]")
     duration_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'slice-duration')]")
     
-    # This item adds the data to a list
+# This item adds the data to a list
     airline_info.append([
         name_search.text, 
         departure_airport_search.text, 
@@ -105,6 +105,8 @@ file = gspread.authorize(credentials)
 sheet = file.open("FlightPricing")
 sheet = sheet.sheet1 
 
+
+# The df_airline sets the data fields to be inserted into google sheets. The set dataframe actually uploads the data
 df_airline = pd.DataFrame(airline_info, columns = ['Airline Name', 'Departure Airport', 'Departure Time', '# Layover Stops', 'Total Layover Duration', 'Layover Airports','Arrival Airport', 'Arrival Time', 'Arrival Date', 'Total Duration of Travel', 'Price', 'Date Added'])
 set_with_dataframe(sheet, df_airline)
 
