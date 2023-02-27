@@ -11,32 +11,41 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
 
+# Identifying chrome driver and maximizing the screen when ran
 s = Service("C:\Windows\chromedriver.exe")
 driver = webdriver.Chrome(service=s)
 driver.maximize_window()
 
+# Driver is opening the website
 driver.get("https://www.priceline.com/m/fly/search/IND-NRT-20230603/NRT-IND-20230617/?cabin-class=ECO&no-date-search=false&num-adults=2&num-children=2&sbsroute=slice1&search-type=0000&vrid=c833c34867c4370bcc4061cd72419759")
 
-airline_info = []
+# This is waiting for contents to load on the page, along with setting variables for scrolling on page
 wait = WebDriverWait(driver,30)
-
 wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'RetailItinerarystyles__CursorStyles')]")))
 time.sleep(2)
 height = driver.execute_script('return document.body.scrollHeight')
 
 scroll_height = 0
+
+airline_info = []
+current_date = datetime.date.today()
+date_added = current_date.strftime("%B %d %Y")
+
+# This is iterating through the elements found on the page
 for i in range(5):
+
     scroll_height = scroll_height + (height/10)
     driver.execute_script('window.scrollTo(0,arguments[0]);',scroll_height)
     time.sleep(2)
 
+# This is establishing the overall div for each element group
 containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'RetailItinerarystyles__CursorStyles')]")
 
-current_date = datetime.date.today()
-date_added = current_date.strftime("%B %d %Y")
 total_time = 0
 layover_name = ""
 
+# This is iterating through each element and pulling out the individual details. 
+# Completing it this way ensures the child elements belong to the parent element and we have a set of matching data.
 for item in containers:
     name_search = item.find_element(By.XPATH, ".//div[contains(@class, 'SliceDisplay__AirlineText')]")
     departure_time_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'departure-time')]")
@@ -47,6 +56,8 @@ for item in containers:
     layout_airport_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-airport')]")
     layover_airports_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-duration')]")
 
+# The for loop below goes through and grabs both sets of layover airport info since both items have the same
+# div id. 
     for lay in layout_airport_search:
         if lay:
             new_name = lay.text.replace("h", ",").replace(" ", "").replace("m", "").strip()
@@ -67,11 +78,11 @@ for item in containers:
             except ValueError:
                 pass
 
-
     arrival_time_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'arrival-time')]")
     flight_price_Search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'display-price')]")
     duration_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'slice-duration')]")
-   
+    
+    # This item adds the data to a list
     airline_info.append([
         name_search.text, 
         departure_airport_search.text, 
@@ -86,7 +97,6 @@ for item in containers:
         flight_price_Search.text, 
         date_added])
    
-  
 scopes = ['https://www.googleapis.com/auth/spreadsheets',
 'https://www.googleapis.com/auth/drive']
 
