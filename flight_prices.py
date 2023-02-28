@@ -11,6 +11,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
 
+def last_filled_row(worksheet):
+    str_list = list(filter(None, worksheet.col_values(1)))
+    return len(str_list)
+
 # Identifying chrome driver and maximizing the screen when ran
 s = Service("C:\Windows\chromedriver.exe")
 driver = webdriver.Chrome(service=s)
@@ -52,6 +56,7 @@ for item in containers:
     departure_time_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'departure-time')]")
     number_of_stops_search = item.find_element(By.XPATH, ".//div[contains(@data-testid, 'slice-details-title')]")
     arrival_date_search = item.find_element(By.XPATH, ".//span[contains(@class, 'SliceTitle__SummaryText')]")
+    split_text = arrival_date_search.text.replace("Arrives: ", "")
     arrival_airport_search = item.find_element(By.XPATH, ".//span[contains(@data-testid, 'arrival-airport')]")
     departure_airport_search = item.find_element(By.XPATH, ".//span[contains(@data-testid, 'departure-airport')]")
     layout_airport_search = item.find_elements(By.XPATH, ".//div[contains(@data-testid, 'layover-airport')]")
@@ -92,7 +97,7 @@ for item in containers:
         layover_name,
         arrival_airport_search.text, 
         arrival_time_search.text, 
-        arrival_date_search.text,  
+        split_text,  
         duration_search.text, 
         flight_price_Search.text, 
         date_added])
@@ -105,10 +110,17 @@ file = gspread.authorize(credentials)
 sheet = file.open("FlightPricing")
 sheet = sheet.sheet1 
 
+dataframe = pd.DataFrame(sheet.get_all_records())
 
+print(dataframe)
 # The df_airline sets the data fields to be inserted into google sheets. The set dataframe actually uploads the data
 df_airline = pd.DataFrame(airline_info, columns = ['Airline Name', 'Departure Airport', 'Departure Time', '# Layover Stops', 'Total Layover Duration', 'Layover Airports','Arrival Airport', 'Arrival Time', 'Arrival Date', 'Total Duration of Travel', 'Price', 'Date Added'])
-set_with_dataframe(sheet, df_airline)
+
+frames = [dataframe, df_airline]
+result = pd.concat(frames)
+
+sheet.clear()
+set_with_dataframe(sheet, result)
 
 
 driver.quit()
