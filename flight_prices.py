@@ -2,6 +2,8 @@ import gspread
 import time
 import datetime
 from gspread_formatting import *
+from gspread_formatting.dataframe import format_with_dataframe, BasicFormatter
+from gspread_formatting import Color
 from oauth2client.service_account import ServiceAccountCredentials
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -10,6 +12,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
+import numpy as np
+from gspread_formatting import *
+import gspread
+import pandas as pd
+from gspread_dataframe import set_with_dataframe
+from gspread_formatting import *
 
 def last_filled_row(worksheet):
     str_list = list(filter(None, worksheet.col_values(1)))
@@ -34,7 +42,7 @@ scroll_height = 0
 
 airline_info = []
 current_date = datetime.date.today()
-date_added = current_date.strftime("%B %d %Y")
+date_added = current_date.strftime("%m/%d/%Y")
 
 # This is iterating through the elements found on the page
 for i in range(5):
@@ -48,6 +56,8 @@ containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'RetailItine
 
 total_time = 0
 layover_name = ""
+first_layover_name = ""
+second_layover_name = ""
 
 # This is iterating through each element and pulling out the individual details. 
 # Completing it this way ensures the child elements belong to the parent element and we have a set of matching data.
@@ -71,6 +81,8 @@ for item in containers:
                 hours_amount = a * 60
                 minutes_amount = b
                 total_time = hours_amount + minutes_amount
+                array_time = np.array(total_time)
+                hours_minutes = '{:2d}h {:02d}m'.format(*divmod(total_time, 60))
             except ValueError:
                 pass
 
@@ -93,7 +105,7 @@ for item in containers:
         departure_airport_search.text, 
         departure_time_search.text, 
         number_of_stops_search.text, 
-        total_time,
+        hours_minutes,
         layover_name,
         arrival_airport_search.text, 
         arrival_time_search.text, 
@@ -110,10 +122,10 @@ file = gspread.authorize(credentials)
 sheet = file.open("FlightPricing")
 sheet = sheet.sheet1 
 
+
 dataframe = pd.DataFrame(sheet.get_all_records())
 
-print(dataframe)
-# The df_airline sets the data fields to be inserted into google sheets. The set dataframe actually uploads the data
+# # The df_airline sets the data fields to be inserted into google sheets. The set dataframe actually uploads the data
 df_airline = pd.DataFrame(airline_info, columns = ['Airline Name', 'Departure Airport', 'Departure Time', '# Layover Stops', 'Total Layover Duration', 'Layover Airports','Arrival Airport', 'Arrival Time', 'Arrival Date', 'Total Duration of Travel', 'Price', 'Date Added'])
 
 frames = [dataframe, df_airline]
@@ -121,6 +133,44 @@ result = pd.concat(frames)
 
 sheet.clear()
 set_with_dataframe(sheet, result)
+
+
+rule = ConditionalFormatRule(
+    ranges=[GridRange.from_a1_range('K2:K', sheet)],
+    booleanRule=BooleanRule(
+        condition=BooleanCondition('NUMBER_LESS', ['1500']),
+        format=CellFormat(textFormat=textFormat(bold=True), backgroundColor=Color(.8, 1, 0.8))
+    )
+)
+
+fmt = cellFormat(
+    backgroundColor=color(1, 1, 1),
+    textFormat=textFormat(bold=False, foregroundColor=color(0, 0, 0)),
+    horizontalAlignment='CENTER',
+    borders=borders(bottom=border('SOLID')), 
+    padding=padding(left=3),
+    
+    )
+format_cell_range(sheet, 'A2:L', fmt)
+
+format_to = len(result.index)
+
+set_row_height(sheet, '1:' + str(format_to + 1), 40)
+
+header_row = cellFormat(
+    backgroundColor=color(1, .6, .8),
+    textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
+    horizontalAlignment='CENTER'
+    )
+format_cell_range(sheet, 'A1:L1', header_row)
+
+
+
+rules = get_conditional_format_rules(sheet)
+rules.clear()
+rules.append(rule)
+rules.save()
+
 
 
 driver.quit()
