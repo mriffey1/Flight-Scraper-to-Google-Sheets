@@ -13,26 +13,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
 import numpy as np
-from gspread_formatting import *
-import gspread
-import pandas as pd
-from gspread_dataframe import set_with_dataframe
-from gspread_formatting import *
+import utils as drive
 
+src = "https://www.priceline.com/m/fly/search/IND-NRT-20230603/NRT-IND-20230617/?cabin-class=ECO&no-date-search=false&num-adults=2&num-children=2&sbsroute=slice1&search-type=0000&vrid=c833c34867c4370bcc4061cd72419759"
 
-def last_filled_row(worksheet):
-    str_list = list(filter(None, worksheet.col_values(1)))
-    return len(str_list)
-
-
-# Identifying chrome driver and maximizing the screen when ran
-s = Service("C:\Windows\chromedriver.exe")
-driver = webdriver.Chrome(service=s)
-driver.maximize_window()
-
-# Driver is opening the website
-driver.get("https://www.priceline.com/m/fly/search/IND-NRT-20230603/NRT-IND-20230617/?cabin-class=ECO&no-date-search"
-           "=false&num-adults=2&num-children=2&sbsroute=slice1&search-type=0000&vrid=c833c34867c4370bcc4061cd72419759")
+driver = drive.web_driver(src)
 
 # This is waiting for contents to load on the page, along with setting variables for scrolling on page
 wait = WebDriverWait(driver, 30)
@@ -56,6 +41,7 @@ for i in range(5):
 
 # This is establishing the overall div for each element group
 containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'RetailItinerarystyles__CursorStyles')]")
+flight_date = driver.find_element(By.XPATH, "//div[contains(@class, 'RetailItinerarystyles__CursorStyles')]")
 
 total_time = 0
 layover_name = ""
@@ -117,6 +103,7 @@ for item in containers:
         flight_price_Search.text,
         date_added])
 
+
 scopes = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
@@ -168,8 +155,8 @@ fmt = cellFormat(
     horizontalAlignment='CENTER',
     borders=borders(bottom=border('SOLID')),
     padding=padding(left=3),
-
 )
+
 format_cell_range(sheet, 'A2:L', fmt)
 format_to = len(result.index)
 
