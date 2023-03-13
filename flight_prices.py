@@ -32,14 +32,12 @@ options.add_argument("disable-notifications")
 options.add_argument("disable-gpu")  ##renderer timeout
 options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
+options.add_argument('--blink-settings=imagesEnabled=false')
 
 # driver = webdriver.Chrome(desired_capabilities=caps, service=s, options=options)
 driver = webdriver.Chrome(options=options, service=s)
 
 sdate = datetime.datetime(2023, 6, 3)
-
-
-
 
 height = driver.execute_script('return document.body.scrollHeight')
 
@@ -54,29 +52,43 @@ second_layover_name = ""
 current_date = datetime.date.today()
 date_added = current_date.strftime("%m/%d/%Y")
 for i in range(3):
-    startdate = sdate + datetime.timedelta(days=i)
+    startdate = sdate + datetime.timedelta(days=i+1)
     enddate = sdate - datetime.timedelta(days=i) # date - days
     modified = enddate.strftime("%Y%m%d")
     url = "https://www.priceline.com/m/fly/search/IND-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00&vrid=4bbd06407109ddc54a9b547324155937"
     urls.append(url)
-   
+    modified = startdate.strftime("%Y%m%d")
+    url = "https://www.priceline.com/m/fly/search/IND-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00&vrid=4bbd06407109ddc54a9b547324155937"
+    urls.append(url)
+    
+sorted(urls)
+
 for url in urls:
+    time.sleep(2)
     driver.get(url)
+    print(url)
     driver.maximize_window()
     
-    driver.implicitly_wait(15)
+    time.sleep(10)
+    scroll_height = 0
+    total_height = int(driver.execute_script("return document.body.scrollHeight"))
+    scroll_height = int(scroll_height + (total_height / 3))
+    for i in range(1, scroll_height, 5):
+        driver.execute_script("window.scrollTo(0, {});".format(i))
+    
     # driver.execute_script("window.scrollTo(0, Y)")
     # wait = WebDriverWait(driver, 40)
-    height = driver.execute_script('return document.body.scrollHeight')
-    scroll_height = 0
+    # height = driver.execute_script('return document.body.scrollHeight')
+    # scroll_height = 0
     # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     # wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, "
     #                                                       "'RetailItineraryNewstyles__CursorStyles')]")))
+    driver.implicitly_wait(5)
     flight_leave_date = driver.find_element(By.XPATH, "//input[contains(@data-selenium, 'flight-calendar')]").get_attribute('value')
     for i in range(5):
-        scroll_height = scroll_height + (height / 10)
-        driver.execute_script('window.scrollTo(0,arguments[0]);', scroll_height)
-        time.sleep(2)
+        # scroll_height = scroll_height + (height / 10)
+        # driver.execute_script('window.scrollTo(0,arguments[0]);', scroll_height)
+        # time.sleep(2)
 
     # This is establishing the overall div for each element group
         containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'RetailItineraryNewstyles__CursorStyles')]")
@@ -134,7 +146,6 @@ for url in urls:
             flight_price_Search.text,
             date_added])
         
-      
 
         # This item adds the data to a list
         # airline_info.append([
@@ -173,7 +184,7 @@ format_cell_range(sheet, 'A1:M1', header_row)
 rule = ConditionalFormatRule(
     ranges=[GridRange.from_a1_range('L2:L', sheet)],
     booleanRule=BooleanRule(
-        condition=BooleanCondition('NUMBER_LESS', ['1700']),
+        condition=BooleanCondition('NUMBER_LESS', ['850']),
         format=CellFormat(textFormat=textFormat(bold=True), backgroundColor=Color(.8, 1, 0.8))
     )
 )
