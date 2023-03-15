@@ -1,3 +1,4 @@
+#type: ignore
 import gspread
 from gspread_formatting import *
 from oauth2client.service_account import ServiceAccountCredentials
@@ -89,7 +90,7 @@ def format_sheet():
     textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
     horizontalAlignment='CENTER'
     )
-  format_row = cellFormat(
+  format_row = cellFormat( 
     backgroundColor=color(1, .6, .8),
     textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
     horizontalAlignment='CENTER'

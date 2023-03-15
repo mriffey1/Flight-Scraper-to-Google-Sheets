@@ -52,8 +52,9 @@ for i in range(3):
     
     url = "https://www.priceline.com/m/fly/search/IND-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
     urls.append(url)
-    # modified = startdate.strftime("%Y%m%d")
-    # url = "https://www.priceline.com/m/fly/search/IND-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
+    modified = startdate.strftime("%Y%m%d")
+    url = "https://www.priceline.com/m/fly/search/IND-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
+    urls.append(url)
 
 exception_count = 3    
 
