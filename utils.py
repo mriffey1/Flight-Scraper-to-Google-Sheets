@@ -1,9 +1,8 @@
 import gspread
 from gspread_formatting import *
-from gspread_formatting import Color
 from oauth2client.service_account import ServiceAccountCredentials
-import utils
-import pygsheets
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 def gspread_creds():
     scopes = ['https://www.googleapis.com/auth/spreadsheets',
@@ -15,6 +14,21 @@ def gspread_creds():
     sheet = sheet.sheet1
 
     return sheet, file
+
+def chrome_options():
+    caps = DesiredCapabilities().CHROME
+    caps["pageLoadStrategy"] = "none" 
+    options = webdriver.ChromeOptions() 
+    options.add_experimental_option("excludeSwitches", ["enable-automation"]) 
+    options.add_argument("disable-gpu")  ##renderer timeout
+    # options.add_argument("--headless=new")
+    options.add_argument('--blink-settings=imagesEnabled=false')
+    options.add_argument("--start-maximized")
+    # options.add_argument("--window-size=1920,1080")
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument("--disable-blink-features")
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    return options
 
 sheet, file = gspread_creds()
 
