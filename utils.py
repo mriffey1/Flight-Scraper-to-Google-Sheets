@@ -9,7 +9,7 @@ def gspread_creds():
     scopes = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name("driveapi.json", scopes)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\akira\Documents\Python\driveapi.json", scopes)
     file = gspread.authorize(credentials)
     sheet = file.open("FlightPricing")
     sheet = sheet.sheet1
@@ -40,7 +40,7 @@ def format_sheet():
   rules.clear()
   rules.save()
   
-  formula = '=IF($L1:$L1<>"", $L:$L<1000, "Empty")'
+  formula = '=IF($L1:$L1<>"", $L:$L<=875, "Empty")'
   body = {
       "requests": [
           {
