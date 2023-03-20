@@ -2,7 +2,6 @@
 /backup_code.py
 /test.py
 /extra.py
-flight_prices.py
 __pycache__/flight_prices.cpython-310.pyc
 __pycache__/utils.cpython-310.pyc
 /run_python_script.bat
