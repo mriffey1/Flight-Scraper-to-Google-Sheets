@@ -9,7 +9,7 @@ def gspread_creds():
     scopes = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\akira\Documents\Python\driveapi.json", scopes)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\akira\Documents\Python\Flight-Scraper-Selenium\driveapi.json", scopes)
     file = gspread.authorize(credentials)
     sheet = file.open("FlightPricing")
     sheet = sheet.sheet1
