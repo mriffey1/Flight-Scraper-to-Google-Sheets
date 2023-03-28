@@ -5,20 +5,22 @@ from oauth2client.service_account import ServiceAccountCredentials
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
+# Google Sheets API credential
 def gspread_creds():
     scopes = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\akira\Documents\Python\Flight-Scraper-Selenium\driveapi.json", scopes)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name("/home/megan/Python/Flight-Scraper-Selenium/driveapi.json", scopes)
     file = gspread.authorize(credentials)
-    sheet = file.open("FlightPricing")
-    sheet = sheet.sheet1
-
+    sheet = file.open("FlightPricing").sheet1
+    # sheet = sheet.sheet1
+    
     return sheet, file
 
+# Chrome options
 def chrome_options():
-    caps = DesiredCapabilities().CHROME
-    caps["pageLoadStrategy"] = "none" 
+    # caps = DesiredCapabilities().CHROME
+    # caps["pageLoadStrategy"] = "none" 
     options = webdriver.ChromeOptions() 
     options.add_experimental_option("excludeSwitches", ["enable-automation"]) 
     options.add_argument("disable-gpu")  ##renderer timeout
@@ -33,14 +35,15 @@ def chrome_options():
 
 sheet, file = gspread_creds()
 
+# Google API for formatting sheet
 def format_sheet():
-  spreadsheetId = "1JwAhe_dNRWQUnRm0c3y3_pWivcEMai_h9euNN2Mqy7w"  # Please set the Spreadsheet ID.
+  spreadsheetId = "1JwAhe_dNRWQUnRm0c3y3_pWivcEMai_h9euNN2Mqy7w"  
   sh = file.open_by_key(spreadsheetId)
   rules = get_conditional_format_rules(sheet)
   rules.clear()
   rules.save()
   
-  formula = '=IF($L1:$L1<>"", $L:$L<=875, "Empty")'
+  formula = '=IF($L1:$L1<>"", $L:$L<=1100, "Empty")'
   body = {
       "requests": [
           {
@@ -115,3 +118,5 @@ def format_sheet():
 
   sheet.sort((1, 'asc'), range='A2:M1000')
   sh.batch_update(body)
+  
+format_sheet()

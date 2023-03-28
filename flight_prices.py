@@ -12,24 +12,27 @@ import numpy as np
 from selenium.common.exceptions import TimeoutException
 from utils import gspread_creds as use_me
 from utils import format_sheet, chrome_options
+ 
+# Function to scroll down on pages
+def scrolling():  
+    driver.execute_script("window.scrollBy(0,2000)","")
+    time.sleep(.001)
+    driver.execute_script("window.scrollBy(0,1000)","")
+    # scroll_height = 0
+    # total_height = int(driver.execute_script("return document.documentElement.scrollHeight"))
+    # scroll_height = int((scroll_height + total_height/2)+100)
+    # for i in range(1, scroll_height, 15):
+    #    driver.execute_script("window.scrollTo(0, {});".format(i))
+        # time.sleep(.001)
 
-def scrolling():
-    scroll_height = 0
-    total_height = int(driver.execute_script("return document.documentElement.scrollHeight"))
-    print(total_height)
-    scroll_height = int(scroll_height + total_height)
-    print("Scroll Height:")
-    print(scroll_height)
-    for i in range(1, scroll_height, 10):
-        driver.execute_script("window.scrollTo(0, {});".format(i))
-        time.sleep(.001)
-
+# Function to refresh page
 def refresh_page():
      driver.refresh()
      time.sleep(10)
      scrolling()
-    
-s = Service("C:\Windows\chromedriver.exe")
+
+# Starting chrome service and options    
+s = Service("/lib/chromium-browser/libs/chromedriver")
 options = chrome_options()
 
 driver = webdriver.Chrome(options=options, service=s)
@@ -37,6 +40,7 @@ sdate = datetime.datetime(2023, 6, 3)
 
 urls = []
 airline_info = []
+airline_dict = {}
 total_time = 0
 layover_name = ""
 first_layover_name = ""
@@ -47,10 +51,11 @@ date_added = current_date.strftime("%m/%d/%Y")
 
 departure_code = []
 departure_code.append("IND")
-departure_code.append("LAX")
-departure_code.append("CHI")
+# departure_code.append("LAX")
+# departure_code.append("CHI")
 
-for i in range(3):
+# Getting dates before and after sdate (start date)
+for i in range(2):
     startdate = sdate + datetime.timedelta(days=i+1)
     enddate = sdate - datetime.timedelta(days=i) # date - days
     
@@ -58,25 +63,21 @@ for i in range(3):
         modified = enddate.strftime("%Y%m%d")
         url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
         urls.append(url)
-        modified = startdate.strftime("%Y%m%d")
-        url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
-        urls.append(url)
+        # modified = startdate.strftime("%Y%m%d")
+        # url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
+        # urls.append(url)
         
-print(urls)
 
 exception_count = 3    
 
 for url in urls:
-    time.sleep(2)
     driver.get(url)
-    time.sleep(10)
+    time.sleep(3)
     scrolling()
-  
     
-    time.sleep(2)
     while True:
         try:
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//li[contains(@class, 'wrapComponentsRenderInView__InViewWrapper-sc-1a56ibf-0 bSIksk')]")))
+            WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//li[contains(@class, 'wrapComponentsRenderInView__InViewWrapper-sc-1a56ibf-0 bSIksk')]")))
             break
         except TimeoutException as e: 
             if exception_count > 0:
@@ -89,7 +90,7 @@ for url in urls:
                 print(e)
    
     for i in range(5):
-        driver.implicitly_wait(5)
+        driver.implicitly_wait(1)
         containers = driver.find_elements(By.XPATH, "//div[contains(@class, 'sc-gsDKAQ sc-dkPtRN iyMkCh ebwuWR')]")
             
     for item in containers[:10]:
@@ -142,6 +143,7 @@ for url in urls:
             duration_search.text,
             flight_price_Search.text,
             date_added])
+
         
 sheet, file = use_me()
 
@@ -169,9 +171,9 @@ result.reset_index(drop=True, inplace=True)
 sheet.clear()
 
 set_with_dataframe(sheet, result)
-
-format_to = len(result.index)
+format_to = len(df_airline.index)
 set_row_height(sheet, '1:' + str(format_to + 1), 40)
 
 format_sheet()
+
 driver.quit()
