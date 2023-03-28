@@ -1,5 +1,0 @@
-steps:
-  - name: Google Sheets
-    uses: dibenlloch/google-sheets-secrets-action@v1.0.2
-    with:
-      driveapi: ${{ driverapi.DRIVERAPI }}
