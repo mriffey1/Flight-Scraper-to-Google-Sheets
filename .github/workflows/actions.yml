@@ -1,0 +1,8 @@
+steps:
+  - name: Google Sheets
+    uses: dibenlloch/google-sheets-secrets-action@v1.0.2
+    with:
+      auth-client-email: ${{ secrets.SERVICE_EMAIL }}
+      auth-private-key: ${{ secrets.SERVICE_KEY }}
+      spreadsheet: ${{ secrets.SPREADSHEET_ID }}
+      sheet: ${{ secrets.SHEET_TAB }} # optional sheet tab. If not seted will use first one
