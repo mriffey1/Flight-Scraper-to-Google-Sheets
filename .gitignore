@@ -10,3 +10,4 @@ flight_prices.spec
 /requirements.in
 /requirements.txt
 /.gitignore
+.gitignore
