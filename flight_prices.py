@@ -11,19 +11,13 @@ from gspread_dataframe import set_with_dataframe
 import numpy as np
 from selenium.common.exceptions import TimeoutException
 from utils import gspread_creds as use_me
-from utils import format_sheet, chrome_options
+from utils import format_sheet, chrome_options, program_log
  
 # Function to scroll down on pages
 def scrolling():  
     driver.execute_script("window.scrollBy(0,2000)","")
     time.sleep(.001)
     driver.execute_script("window.scrollBy(0,1000)","")
-    # scroll_height = 0
-    # total_height = int(driver.execute_script("return document.documentElement.scrollHeight"))
-    # scroll_height = int((scroll_height + total_height/2)+100)
-    # for i in range(1, scroll_height, 15):
-    #    driver.execute_script("window.scrollTo(0, {});".format(i))
-        # time.sleep(.001)
 
 # Function to refresh page
 def refresh_page():
@@ -51,9 +45,10 @@ date_added = current_date.strftime("%m/%d/%Y")
 
 departure_code = []
 departure_code.append("IND")
-# departure_code.append("LAX")
-# departure_code.append("CHI")
+departure_code.append("CHI")
 
+print(f"-------------------- {date_added} --------------------")
+program_log("Application", "started")
 # Getting dates before and after sdate (start date)
 for i in range(2):
     startdate = sdate + datetime.timedelta(days=i+1)
@@ -63,18 +58,18 @@ for i in range(2):
         modified = enddate.strftime("%Y%m%d")
         url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
         urls.append(url)
-        # modified = startdate.strftime("%Y%m%d")
-        # url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
-        # urls.append(url)
+        modified = startdate.strftime("%Y%m%d")
+        url = "https://www.priceline.com/m/fly/search/"+ depart_code + "-NRT-" + modified + "/?cabin-class=ECO&no-date-search=false&num-adults=2&num-youths=2&sbsroute=slice1&search-type=00"
+        urls.append(url)
         
 
 exception_count = 3    
 
-for url in urls:
+for url in urls:   
     driver.get(url)
     time.sleep(3)
     scrolling()
-    
+       
     while True:
         try:
             WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//li[contains(@class, 'wrapComponentsRenderInView__InViewWrapper-sc-1a56ibf-0 bSIksk')]")))
@@ -143,11 +138,13 @@ for url in urls:
             duration_search.text,
             flight_price_Search.text,
             date_added])
+  
 
         
 sheet, file = use_me()
 
 dataframe = pd.DataFrame(sheet.get_all_records())
+program_log("All current data from spreadsheet", "obtained")
 
 df_airline = pd.DataFrame(airline_info,
                           columns=['Departure Date', 
@@ -167,13 +164,15 @@ df_airline = pd.DataFrame(airline_info,
 frames = [dataframe, df_airline]
 result = pd.concat(frames)
 result.reset_index(drop=True, inplace=True)
-
+program_log("Current and new data", "concatenated together")
 sheet.clear()
-
+program_log("Existing sheet", "cleared")
 set_with_dataframe(sheet, result)
+program_log("Existing sheet", "updated with new data")
 format_to = len(df_airline.index)
 set_row_height(sheet, '1:' + str(format_to + 1), 40)
 
 format_sheet()
-
+program_log("Program", "successfully ran")
+print("-------------------- END OF LINE --------------------\n\n")
 driver.quit()
