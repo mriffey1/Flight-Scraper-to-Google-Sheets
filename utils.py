@@ -40,7 +40,7 @@ def program_log(logging_item, what_done):
 
 # Google API for formatting sheet
 def format_sheet():
-  spreadsheetId = "1JwAhe_dNRWQUnRm0c3y3_pWivcEMai_h9euNN2Mqy7w"  
+  spreadsheetId = "SHEET_ID_HERE"  
   sh = file.open_by_key(spreadsheetId)
   rules = get_conditional_format_rules(sheet)
   rules.clear()
