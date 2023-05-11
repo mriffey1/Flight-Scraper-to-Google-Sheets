@@ -15,7 +15,6 @@ def gspread_creds():
     credentials = ServiceAccountCredentials.from_json_keyfile_name("/home/megan/Python/Flight-Scraper-Selenium/driveapi.json", scopes)
     file = gspread.authorize(credentials)
     sheet = file.open("FlightPricing").sheet1
-    # sheet = sheet.sheet1
     
     return sheet, file
 
@@ -40,14 +39,14 @@ def program_log(logging_item, what_done):
 
 # Google API for formatting sheet
 def format_sheet():
-  spreadsheetId = "SHEET_ID_HERE"  
-  sh = file.open_by_key(spreadsheetId)
-  rules = get_conditional_format_rules(sheet)
-  rules.clear()
-  rules.save()
-  program_log("Conditional Rules", "cleared")
-  formula = '=IF($L1:$L1<>"", $L:$L<=875, "Empty")'
-  body = {
+    spreadsheetId = "sheet_id"  
+    sh = file.open_by_key(spreadsheetId)
+    rules = get_conditional_format_rules(sheet)
+    rules.clear()
+    rules.save()
+    program_log("Conditional Rules", "cleared")
+    formula = '=IF($L1:$L1<>"", $L:$L<=600, "Empty")'
+    body = {
       "requests": [
           {
               "addConditionalFormatRule": {
@@ -93,22 +92,22 @@ def format_sheet():
               }
           }   
       ]
-  }
+    }
 
-    
-  header_row = cellFormat(
-    backgroundColor=color(1, .6, .8),
-    textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
-    horizontalAlignment='CENTER'
+    header_row = cellFormat(
+        backgroundColor=color(1, .6, .8),
+        textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
+        horizontalAlignment='CENTER'
     )
   
-  format_row = cellFormat( 
-    backgroundColor=color(1, .6, .8),
-    textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
-    horizontalAlignment='CENTER'
+    format_row = cellFormat( 
+        backgroundColor=color(1, .6, .8),
+        textFormat=textFormat(bold=True, foregroundColor=color(0, 0, 0)),
+        horizontalAlignment='CENTER',
+        verticalAlignment='MIDDLE'
     )
 
-  fmt = cellFormat(
+    fmt = cellFormat(
         backgroundColor=color(1, 1, 1),
         textFormat=textFormat(bold=False, foregroundColor=color(0, 0, 0)),
         horizontalAlignment='CENTER',
@@ -116,23 +115,30 @@ def format_sheet():
         padding=padding(left=3),
     )
   
-  fmt2 = cellFormat(
+    fmt2 = cellFormat(
         numberFormat=numberFormat('DATE', 'MM/DD/YYYY')
     )
   
-  format_cell_range(sheet, 'A1:M1', header_row)
-  program_log("Header row", "formatted")
-  
-  
-  format_cell_range(sheet, 'A2:M', fmt)
-  program_log("Borders", "formatted and added")
+    fmt_date_added = cellFormat(
+        numberFormat=numberFormat('DATE', 'dddd, mmm dd, yyyy')
+    )
 
-  format_cell_range(sheet, 'A2:A', fmt2)
-  format_cell_range(sheet, 'J2:J', fmt2)
-  program_log("Column A and J", "formatted as date")
+    program_log("Header row", "formatted")
   
-  sheet.sort((1, 'asc'), range='A2:M1000')
-  program_log("The spreadsheet", "sorted by date")
+    format_cell_ranges(sheet, [
+      ('A:M', format_row), 
+      ('A1:M1', header_row), 
+      ('A2:M', fmt), 
+      ('A2:A', fmt2),
+      ('J2:J', fmt2),
+      ('M2:M', fmt_date_added),
+      ('A1:M1', header_row)
+      ])
   
-  sh.batch_update(body)
-  program_log("New conditional formatting", "applied")
+  
+    sheet.sort((1, 'des'))
+    program_log("The spreadsheet", "sorted by date")
+  
+    sh.batch_update(body)
+    program_log("New conditional formatting", "applied")
+  
